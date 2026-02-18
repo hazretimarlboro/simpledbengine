@@ -42,6 +42,8 @@ extern vector<Row*> allRows;
 Database* createDatabase(const string& name);
 Table* createTable(Database* db, const string& name, const vector<string>& columnNames);
 Row* createRow(Table* table, const vector<string>& data, bool overwrite = false);
+vector<vector<string>> readAllRows(Table* table);
+void printTable(Table* table);
 
 void destroyEverything();
 

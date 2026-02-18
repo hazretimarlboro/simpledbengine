@@ -2,6 +2,8 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
+#include <algorithm>
 
 using namespace std;
 namespace fs = std::filesystem;
@@ -10,6 +12,98 @@ vector<Database*> allDatabases;
 vector<Table*> allTables;
 vector<Row*> allRows;
 
+
+vector<vector<string>> readAllRows(Table* table)
+{
+    vector<vector<string>> columns;
+    vector<vector<string>> rows;
+    string folderName = "./db/" + table->parentDb->name + "/" + table->name;
+
+    for(int i =0; i < table->columnNames.size(); i++)
+    {
+        vector<string> lines;
+        string filename = folderName+"/"+table->columnNames[i];
+        fstream individualFile(filename, ios::in);
+        string line;
+        while(std::getline(individualFile,line))
+        {
+            lines.push_back(line);
+        }
+
+        columns.push_back(lines);
+    }
+
+    if (columns.empty())
+        return {};
+    size_t rowcount = columns[0].size();
+
+    int j=0;
+    for(int i=0; i < rowcount; i++)
+    {
+        vector<string> row;
+        for(const auto& x: columns)
+        {
+            row.push_back(x[i]);
+        }
+
+        rows.push_back(row);
+    }
+ 
+    return rows;
+}
+
+void printTable(Table* table)
+{
+    if (!table) return;
+
+    vector<vector<string>> rows = readAllRows(table);
+
+    if (rows.empty())
+    {
+        cout << "Table is empty.\n";
+        return;
+    }
+
+    size_t colCount = table->columnNames.size();
+
+    vector<size_t> colWidths(colCount);
+
+    for (size_t i = 0; i < colCount; i++)
+    {
+        colWidths[i] = table->columnNames[i].length();
+    }
+
+    for (const auto& row : rows)
+    {
+        for (size_t i = 0; i < colCount; i++)
+        {
+            colWidths[i] = max(colWidths[i], row[i].length());
+        }
+    }
+
+    for (size_t i = 0; i < colCount; i++)
+    {
+        cout << left << setw(colWidths[i] + 2)
+             << table->columnNames[i];
+    }
+    cout << "\n";
+
+    for (size_t i = 0; i < colCount; i++)
+    {
+        cout << string(colWidths[i], '-') << "  ";
+    }
+    cout << "\n";
+
+    for (const auto& row : rows)
+    {
+        for (size_t i = 0; i < colCount; i++)
+        {
+            cout << left << setw(colWidths[i] + 2)
+                 << row[i];
+        }
+        cout << "\n";
+    }
+}
 
 void destroyEverything()
 {
